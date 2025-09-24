@@ -8,7 +8,7 @@ filtered_metaphlan.to_csv('results/metaphlan_riskgroup_only.tsv', sep='\t')
 
 
 ##----run beta_diversity
-# Run in terminal (example)
+# Run in terminal
 # Rscript utils/calculate_diversity.R \
 #   -f results/metaphlan_riskgroup_only.tsv \
 #   -d beta -m bray-curtis \
