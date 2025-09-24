@@ -4,4 +4,4 @@
    - PERMANOVA(permutational analysis of variance): non-parametric multivariate statistical permutation test
 2. differential abundance analysis(DAA):
    - Log2 fold change & Mann-Whitney U test
-   - Linear Discriminant Analysis(LDA)
+   - Linear Discriminant Analysis(LDA): maximzing the seperatibility among labelled groups
