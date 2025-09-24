@@ -1,31 +1,14 @@
+##----subsampling metaphlan_df
 import pandas as pd
-import numpy as np
-from skbio.stats.ordination import pcoa
-from skbio import DistanceMatrix
-import matplotlib.pyplot as plt
-import seaborn as sns
-from skbio.stats.distance import permanova
-from matplotlib.patches import Ellipse
-import matplotlib.transforms as transforms
 
-# Define input/output paths (relative or user-defined)
-cardio_file = "data/cardiometabolic_marker_postprandial.tsv"
-metaphlan_file = "data/metaphlan_profiles.tsv"
-output_metaphlan_file = "results/metaphlan_riskgroup_only.tsv"
-
-# Read cardiometabolic data
-selected = pd.read_csv(cardio_file, sep='\t', index_col=0)
-
-# Read metaphlan profile
-metaphlan = pd.read_csv(metaphlan_file, sep='\t', index_col=0)
-
-# Filter##---- subsampling metaphlan_df
+selected = pd.read_csv('data/cardiometabolic_marker_postprandial.tsv', sep='\t', index_col=0)
+metaphlan = pd.read_csv('data/metaphlan_profiles.tsv', sep='\t', index_col=0)
 filtered_metaphlan = metaphlan.loc[:, metaphlan.columns.intersection(selected.index)]
-filtered_metaphlan.to_csv(output_metaphlan_file, sep='\t')
+filtered_metaphlan.to_csv('results/metaphlan_riskgroup_only.tsv', sep='\t')
 
 
-##---- run beta_diversity (R scripts)
-# Example command (to be run in terminal)
+##----run beta_diversity
+# Run in terminal (example)
 # Rscript utils/calculate_diversity.R \
 #   -f results/metaphlan_riskgroup_only.tsv \
 #   -d beta -m bray-curtis \
@@ -38,37 +21,40 @@ filtered_metaphlan.to_csv(output_metaphlan_file, sep='\t')
 #   -o results/diversity
 
 
-##---- plot PCoA
-# Read distance matrices
-bray_file = "results/diversity/metaphlan_riskgroup_only_bray-curtis.tsv"
-unifrac_file = "results/diversity/metaphlan_riskgroup_only_weighted-unifrac.tsv"
+##----plot pcoa plot
+import numpy as np
+from skbio.stats.ordination import pcoa
+from skbio import DistanceMatrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+from skbio.stats.distance import permanova
+from matplotlib.patches import Ellipse
+import matplotlib.transforms as transforms
 
-df = pd.read_csv(unifrac_file, sep='\t', index_col=0)  # or bray_file
-cardio = pd.read_csv(cardio_file, sep='\t')
+# read df
+df = pd.read_csv('results/diversity/metaphlan_riskgroup_only_weighted-unifrac.tsv', sep='\t', index_col=0)
+df = pd.read_csv('results/diversity/metaphlan_riskgroup_only_bray-curtis.tsv', sep='\t', index_col=0) 
+
+cardio = pd.read_csv('data/cardiometabolic_marker_postprandial.tsv', sep='\t')
 cardio = cardio[['P3_sample_ID', 'group']].set_index('P3_sample_ID')
 
-# Make distance matrix
 dm = DistanceMatrix(df.values.copy(order='C'), ids=df.index)
 grouping = cardio.loc[df.index, 'group']
 
-# PERMANOVA
-permanova_results = permanova(dm, grouping=grouping, permutations=999)
+permanova_results = permanova(dm, grouping=grouping, permutations=999) 
 p_value = permanova_results['p-value']
 
-# PCoA
 pcoa_results = pcoa(dm)
 pcoa_df = pcoa_results.samples
 pcoa_df['group'] = grouping.values
 
-
-##---- confidence ellipse helper
-def confidence_ellipse(x, y, ax, n_std=1.96, **kwargs):
+def confidence_ellipse(x, y, ax, n_std=1.96, **kwargs): 
     if len(x) < 2:
-        return
+        return  
     cov = np.cov(x, y)
     if np.any(np.isnan(cov)) or np.linalg.det(cov) == 0:
-        return
-    pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
+        return 
+    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
     ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2, **kwargs)
@@ -76,19 +62,19 @@ def confidence_ellipse(x, y, ax, n_std=1.96, **kwargs):
     scale_y = np.sqrt(cov[1, 1]) * n_std
     mean_x = np.mean(x)
     mean_y = np.mean(y)
-    transf = transforms.Affine2D().rotate_deg(45).scale(scale_x, scale_y).translate(mean_x, mean_y)
+    transf = transforms.Affine2D() \
+        .rotate_deg(45) \
+        .scale(scale_x, scale_y) \
+        .translate(mean_x, mean_y)
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
 
-
-##---- plot
 groups = pcoa_df['group'].unique()
 palette = sns.color_palette(n_colors=len(groups))
 
 plt.figure(figsize=(8, 6))
 ax = plt.gca()
-sns.scatterplot(data=pcoa_df, x='PC1', y='PC2', hue='group',
-                palette=palette, s=100, ax=ax)
+sns.scatterplot(data=pcoa_df, x='PC1', y='PC2', hue='group', palette=palette, s=100, ax=ax)
 
 for group, color in zip(groups, palette):
     subset = pcoa_df[pcoa_df['group'] == group]
@@ -98,10 +84,10 @@ for group, color in zip(groups, palette):
 ax.set_xlabel(f"PC1 ({pcoa_results.proportion_explained['PC1']:.2%} variance)")
 ax.set_ylabel(f"PC2 ({pcoa_results.proportion_explained['PC2']:.2%} variance)")
 ax.set_title('Weighted Unifrac')
-ax.text(0.05, 0.95, f'PERMANOVA p = {p_value:.4f}',
-        transform=ax.transAxes, fontsize=12, verticalalignment='top')
+ax.text(0.05, 0.95, f'PERMANOVA p = {p_value:.4f}', transform=ax.transAxes,
+        fontsize=12, verticalalignment='top')
 
-plt.legend(title='Group')
+plt.legend(title='group')
 plt.grid(False)
 plt.tight_layout()
 plt.savefig("results/sgb_weighted_unifrac_riskgroup_plot.png", dpi=300)
