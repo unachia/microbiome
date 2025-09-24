@@ -90,5 +90,5 @@ ax.text(0.05, 0.95, f'PERMANOVA p = {p_value:.4f}', transform=ax.transAxes,
 plt.legend(title='group')
 plt.grid(False)
 plt.tight_layout()
-plt.savefig("results/sgb_weighted_unifrac_riskgroup_plot.png", dpi=300)
+plt.savefig("results/sgb_dist_type_riskgroup_plot.png", dpi=300)
 plt.close()
