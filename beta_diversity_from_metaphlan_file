@@ -1,4 +1,3 @@
-##---- subsampling metaphlan_df
 import pandas as pd
 import numpy as np
 from skbio.stats.ordination import pcoa
@@ -20,7 +19,7 @@ selected = pd.read_csv(cardio_file, sep='\t', index_col=0)
 # Read metaphlan profile
 metaphlan = pd.read_csv(metaphlan_file, sep='\t', index_col=0)
 
-# Filter
+# Filter##---- subsampling metaphlan_df
 filtered_metaphlan = metaphlan.loc[:, metaphlan.columns.intersection(selected.index)]
 filtered_metaphlan.to_csv(output_metaphlan_file, sep='\t')
 
